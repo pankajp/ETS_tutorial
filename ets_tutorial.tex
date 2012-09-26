@@ -258,7 +258,7 @@ In []: plot(t, y)
 \begin{frame}[fragile]
 \frametitle{Result}
 \begin{center}
-    \includegraphics[height=2in, interpolate=true]{data/population_ode}
+    \includegraphics[height=2in, interpolate=true]{images/population_ode}
 \end{center}
 \end{frame}
 
@@ -322,7 +322,7 @@ In []: plot(t, y)
 % \begin{frame}[fragile]
 % \frametitle{Result}
 % \begin{center}
-%     \includegraphics[height=2in, interpolate=true]{data/pendulum_ode}
+%     \includegraphics[height=2in, interpolate=true]{images/pendulum_ode}
 % \end{center}
 %   \inctime{10}
 % \end{frame}
@@ -366,10 +366,10 @@ from mayavi import mlab
 \end{lstlisting}
 \end{frame}
 
-\BackgroundPicture{data/lorenz_traj}
+\BackgroundPicture{images/lorenz_traj}
 \begin{frame}[plain]
 \end{frame}
-\BackgroundPicture{data/blank}
+\BackgroundPicture{images/blank}
 
 \begin{frame}
   \frametitle{Now what?}
@@ -677,9 +677,172 @@ class LorenzEquation(ODE):
 \begin{frame}
   \frametitle{Chaco}
   \begin{itemize}
-      \item XXX
- \end{itemize}
+      \item 2D plotting library
+      \item Embeddable in any wx/Qt application
+      \item Fast and interactive visualizations
+      \item Integrates well with Traits and TraitsUI
+      \item Easily extensible to create new types of plots and interactions
+  \end{itemize}
 \end{frame}
+
+\begin{frame}
+  \frametitle{Chaco Interactive Plot Examples}
+\scriptsize
+\url{http://docs.enthought.com/chaco/user_manual/annotated_examples.html}
+\begin{center}
+    \includegraphics[height=2in, interpolate=true]{images/chaco_regr}
+    \includegraphics[height=2in, interpolate=true]{images/chaco_cmapi}
+\end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Chaco Architecture Overview}
+  \begin{itemize}
+      \item Data Handling: wrap input data, transform co-ordinates between data and screen space (eg., ArrayDataSource, LinearMapper)
+      \item Visual components: render to the screen (eg. LinePlot, ScatterPlot, Legend, PlotAxis, ...)
+      \item Tools: handle keyboard or mouse events and modify other components (eg. PanTool, ZoomTool, ScatterInspector)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Simple LinePlot}
+\scriptsize
+\begin{lstlisting}
+class LinePlot(HasTraits):
+    plot = Instance(Plot)
+    traits_view = View(
+        Item('plot',editor=ComponentEditor(), show_label=False),
+             width=500, height=500,
+        resizable=True,
+        title="Chaco Plot")
+
+    def _plot_default (self):
+        x = linspace(-14, 14, 100)
+        y = sin(x) * x**3
+        plotdata = ArrayPlotData(x = x, y = y)
+        plot = Plot(plotdata)
+        plot.plot(("x", "y"), type="line", color="blue")
+        plot.title = "sin(x) * x^3"
+        return plot
+\end{lstlisting}
+\end{frame}
+
+%
+%\begin{frame}[fragile,plain]
+%\frametitle{Plotting the ODE Solution}
+%\scriptsize
+%The Plot view, plot and the old solution. ODE can be obtained from ODESolver,
+%so it can be a property.
+%XXX: tmpl
+%\begin{lstlisting}
+%class ODEPlot(HasTraits):
+%    """ A 2D plot of ode solution variables. """
+%    plot = Instance(Component)
+%    # We need to set data when solution changes
+%    pd = Instance(ArrayPlotData, args=())
+%
+%    ode = Property(Instance(ODE), depends_on='ode_soln')
+%    ode_soln = Instance(ODESolver)
+%    traits_view = View(Item('plot', editor=ComponentEditor(),
+%                            show_label=False),
+%                       resizable=True, title="ODE Solution")
+%
+%    def _get_ode(self):
+%        return self.ode_soln and self.ode_soln.ode
+%    ...
+%    def _set_arr(self, name, key='index'):
+%        if name == self.ode.t_var:
+%            arr = self.ode_soln.t_arr
+%        else:
+%            arr = self.ode_soln.soln_arr[:, self.ode.vars.index(name)]
+%        self.trait_set(**{key+'_arr':arr})
+%
+%    @on_trait_change('ode_soln.soln_arr')
+%    def _on_soln_changed(self):
+%        self.pd.set_data('index', self.ode_soln.t_arr)
+%        self.pd.set_data('index', self.ode_soln.soln_arr[:, 0])
+%
+%    def _plot_default(self):
+%        plot = Plot(self.pd)
+%        plot.tools.append(TraitsTool(component=plot))
+%        plot.tools.append(ZoomTool(component=plot))
+%        plot.tools.append(PanTool(component=plot))
+%        plot.plot(('index', 'value'))
+%        return plot
+%\end{lstlisting}
+%\end{frame}
+
+
+\begin{frame}[fragile,plain]
+\frametitle{Plotting the ODE Solution}
+\scriptsize
+The Plot view, plot and the old solution. ODE can be obtained from ODESolver,
+so it can be a property.
+\begin{lstlisting}
+class ODEPlot(HasTraits):
+    """ A 2D plot of ode solution variables. """
+    plot = Instance(Component)
+    # We need to set data when solution changes
+    pd = Instance(ArrayPlotData, args=())
+
+    ode = Property(Instance(ODE), depends_on='ode_soln')
+    ode_soln = Instance(ODESolver)
+
+    def _get_ode(self):
+        return self.ode_soln and self.ode_soln.ode
+    ...
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Plotting the ODE Solution}
+\scriptsize
+We can create a plot using the first solution array.
+\begin{lstlisting}
+class ODEPlot(HasTraits):
+    ...
+    traits_view = View(Item('plot', editor=ComponentEditor(),
+                            show_label=False),
+                       resizable=True, title="ODE Solution")
+
+    def _plot_default(self):
+        self.pd.set_data('index', self.ode_soln.t_arr)
+        # Set the first array as value array for plot.
+        self.pd.set_data('value', self.ode_soln.soln_arr[:,0])
+        plot = Plot(self.pd)
+        # Add some interactivity to the plots.
+        plot.tools.append(TraitsTool(component=plot))
+        plot.tools.append(ZoomTool(component=plot))
+        plot.tools.append(PanTool(component=plot))
+        plot.plot(('index', 'value'))
+        return plot
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Plotting the ODE Solution}
+\scriptsize
+We can make the plot react to changes to the solution
+(changing initial condition etc.)
+\begin{lstlisting}
+class ODEPlot(HasTraits):
+    ...
+    @on_trait_change('ode_soln.soln_arr')
+    def _on_soln_changed(self):
+        self.pd.set_data('index', self.ode_soln.t_arr)
+        self.pd.set_data('value', self.ode_soln.soln_arr[:, 0])
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Plotting the ODE Solution}
+Complete plot view with selection for variables to plot
+\begin{center}
+    \includegraphics[height=3in, interpolate=true]{images/plot2d}
+\end{center}
+\end{frame}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Mayavi}

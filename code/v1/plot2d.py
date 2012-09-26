@@ -11,7 +11,7 @@ from ode import ODE, ODESolver
 class ODEPlot(HasTraits):
     """ A 2D plot of ode solution variables. """
     plot = Instance(Component)
-    pd = Instance(ArrayPlotData)
+    pd = Instance(ArrayPlotData, args=())
     index_arr = Array
     value_arr = Array
 
@@ -60,9 +60,6 @@ class ODEPlot(HasTraits):
     @on_trait_change('index_arr,value_arr')
     def _on_arr_changed(self, obj, name, old, new):
         self.pd.set_data(name[:-4], new)
-
-    def _pd_default(self):
-        return ArrayPlotData()
 
     def _plot_default(self):
         self._set_arr(self.index_name, 'index')
