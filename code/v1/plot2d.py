@@ -54,8 +54,8 @@ class ODEPlot(HasTraits):
 
     @on_trait_change('ode_soln.soln_arr')
     def _on_soln_changed(self):
-        self.index_arr = self.ode_soln.t_arr
-        self.value_arr = self.ode_soln.t_arr
+        self._set_arr(self.index_name, 'index')
+        self._set_arr(self.value_name, 'value')
 
     @on_trait_change('index_arr,value_arr')
     def _on_arr_changed(self, obj, name, old, new):
@@ -79,10 +79,11 @@ class ODEPlot(HasTraits):
 
 
 if __name__ == '__main__':
-    from ode import EpidemicODE, LorenzEquation
+    from ode import EpidemicODE, LorenzEquation, GenericODE
     import numpy
     ode = EpidemicODE()
     ode = LorenzEquation()
+    ode.configure_traits()
     soln = ODESolver(ode=ode, initial_state=[10.,50.,50.], t_arr=numpy.linspace(0,10,1001))
     plot = ODEPlot(ode_soln=soln)
     plot.configure_traits()
