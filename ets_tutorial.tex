@@ -111,7 +111,7 @@
 \date[] {
 \small
 PyCon India, Bangalore\\
-September 27, 2012
+September 28, 2012
 }
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -220,21 +220,9 @@ September 27, 2012
 \begin{align}
     \frac{dx}{dt} = f(x, t)
 \end{align}
+\emph{x} can be a vector with many components.
 \end{frame}
 
-\begin{frame}
-  \frametitle{An example}
-\begin{align}
-    \frac{dx}{dt} = f(x, t)
-\end{align}
-\end{frame}
-
-\begin{frame}
-  \frametitle{More complex systems}
-\begin{align}
-    \frac{dx}{dt} = f(x, t)
-\end{align}
-\end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Solving ODEs using SciPy}
@@ -373,7 +361,7 @@ r = odeint(lorenz, start, t)
 x, y, z = r[:,0], r[:,1], r[:,2]
 
 mlab.plot3d(x, y, z, t, 
-from enthought.mayavi import mlab
+from mayavi import mlab
                 tube_radius=None)
 \end{lstlisting}
 \end{frame}
@@ -401,11 +389,11 @@ from enthought.mayavi import mlab
 \begin{frame}
   \frametitle{ETS: Enthought Tool Suite}
   \begin{itemize}
-    \item Traits
-    \item TraitsUI
-    \item Chaco
-    \item Mayavi
-    \item Envisage
+    \item Traits: Object Models
+    \item TraitsUI: Views for Traits Objects
+    \item Chaco: 2D Visualizations
+    \item Mayavi: 3D Visualizations
+    \item Envisage: Application Framework
     \vspace*{0.5in}
     \item Miscellaneous libraries
   \end{itemize}
@@ -419,12 +407,12 @@ from enthought.mayavi import mlab
 \begin{frame}
   \frametitle{Introduction to Traits}
   \begin{itemize}
-    \item ETS: Enthought Tool Suite
-    \item A \alert{trait} is a \alert{special} Python object attribute
-        \vspace*{2em}
+    \item A \alert{trait} is a type definition that can be used for normal
+        Python object attributes giving them additional characteristics.
+    \vspace*{2em}
 
-    \item \url{code.enthought.com/projects/traits}
-    \item \url{github.enthought.com/traits/tutorials}
+    \item \url{http://code.enthought.com/projects/traits}
+    \item \url{http://github.enthought.com/traits/tutorials}
 
   \end{itemize}
 \end{frame}
@@ -445,7 +433,7 @@ from enthought.mayavi import mlab
 \vspace*{-16pt}
 \footnotesize
 \begin{lstlisting}
-from enthought.traits.api import (Delegate, HasTraits, 
+from traits.api import (Delegate, HasTraits, 
     Instance, Int, Str)
 
 class Parent(HasTraits):
@@ -487,6 +475,33 @@ In []: moe.configure_traits() # Visualization
 \inctime{10}
 \end{frame}
 
+
+\begin{frame}[fragile,plain]
+    \frametitle{Predefined Trait Types}
+    \vspace*{-6pt}
+    \small
+    \begin{itemize}
+        \item Standard: Bool, Int, Float, Str, Tuple, List, Dict
+        \item Constrained: Range, Regex, Expression, ReadOnly
+        \item Special: Either, Enum, Array, File, Color, Font
+        \item Generic: Instance, Any, Callable
+        \item ...
+        \item custom traits
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+    \frametitle{Trait Change Notifications}
+    \vspace*{-6pt}
+    \small
+    \begin{itemize}
+        \item Static: def \_<trait\_name>\_changed()
+        \item Decorator: @on\_trait\_change('extended.trait[].name')
+        \item Dynamic: myobject.on\_trait\_change(handler, 'extended.trait[].name')
+    \end{itemize}
+\end{frame}
+
+
 \begin{frame}
   \frametitle{Designing the ODE explorer app}
   \Large
@@ -500,18 +515,161 @@ In []: moe.configure_traits() # Visualization
   \begin{itemize}
       \item A class to represent the equation and parameters?
       \item A class for the ODE solution
-      \item TDD!
+      \item Make sure it works! - TDD
  \end{itemize}
 \end{frame}
+
+
+\begin{frame}[fragile,plain]
+    \frametitle{Lorenz Equation}
+\scriptsize
+\begin{lstlisting}
+class LorenzEquation(HasTraits):
+    s = Float(10)
+    r = Float(28)
+    b = Float(8./3)
+    
+    def eval(self, X, t):
+        x, y, z = X[0], X[1], X[2]
+        return numpy.array([self.s*(y-x),
+                            self.r*x - y - x*z,
+                            x*y - self.b*z])
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile,plain]
+\frametitle{ODE Equation model}
+Lets generalize it.
+\scriptsize
+\begin{lstlisting}
+class ODE(HasTraits):
+    """ An ODE of the form dX/dt = f(X) """
+    name = Str
+    num_vars = Int
+    vars = Either(List(Str), Str, desc='The names of variables')
+    t_var = Str('Time')
+
+    def eval(self, X, t):
+        """ Evaluate the derivative function f(X). """
+        raise NotImplementedError
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile,plain]
+\frametitle{Lorenz Equation as an ODE Subclass}
+\scriptsize
+\begin{lstlisting}
+class LorenzEquation(ODE):
+    name = 'Lorenz Equation'
+    num_vars = 3
+    vars = ['x', 'y', 'z']
+    s = Float(10)
+    r = Float(28)
+    b = Float(8./3)
+
+    def eval(self, X, t):
+        x, y, z = X[0], X[1], X[2]
+        return numpy.array([self.s*(y-x),
+                             self.r*x - y - x*z,
+                             x*y - self.b*z])
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile,plain]
+\frametitle{ODESolver}
+Someone needs to solve the ODE!
+\scriptsize
+\begin{lstlisting}
+class ODESolver(HasTraits):
+    """ A solver for the ODE (fixed initial condn.) """
+    ode = Instance(ODE)
+    initial_state = Either(Float, Array)
+    t_arr = Array
+    soln_arr = Property(Array, depends_on='initial_state, t_arr, ode')
+
+    @cached_property
+    def _get_soln_arr(self):
+        return self.solve()
+
+    def solve(self):
+        """ Solve the ODE and return the values of the solution vector at
+        specified times t. """
+        return odeint(self.ode.eval, self.initial_state, self.t_arr)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Testing}
+Does it work?
+\scriptsize
+\begin{lstlisting}
+class TestLorenzEquation(unittest.TestCase):
+    def setUp(self):
+        self.ode = LorenzEquation()
+        self.solver = ODESolver(ode=self.ode, initial_state=[10.,50.,50.], t_arr=numpy.linspace(0,10,1001))
+
+    def test_eval(self):
+        dX = self.ode.eval(self.solver.initial_state, 0.0)
+        self.assertAlmostEqual(dX[0], 400)
+        self.assertAlmostEqual(dX[1], -270)
+        self.assertAlmostEqual(dX[2], 1100/3.)
+
+    def test_solve(self):
+        soln = self.solver.soln_arr[1,:]
+        self.assertAlmostEqual(soln[0], 13.65484958)
+        self.assertAlmostEqual(soln[1], 46.64090341)
+        self.assertAlmostEqual(soln[2], 54.35797299)
+\end{lstlisting}
+\end{frame}
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{TraitsUI}
 
 \begin{frame}
   \frametitle{TraitsUI}
   \begin{itemize}
-      \item XXX
- \end{itemize}
+      \item Implement MVC design pattern
+      \item Create default views for models
+      \item Keep multiple views synced with model
+      \item Create UI with minimal toolkit knowledge
+  \end{itemize}
 \end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Default Traits View}
+\begin{lstlisting}
+father = Parent(last_name='Joe')
+child = Child(age=2, father=father)
+child.configure_traits()
+\end{lstlisting}
+\pause
+\begin{itemize}
+\item Automatic UI creation with \emph{configure\_traits()}
+\item Automatic sync with model
+\item Automatic sync between different views
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Lorenz Equation View}
+Configure the parameters of the Lorenz equation \emph{s}, \emph{r} and \emph{b}
+\scriptsize
+\begin{lstlisting}
+class LorenzEquation(ODE):
+    ...
+    view = View(Item('s', editor=RangeEditor(low=0.0, high=20.0)),
+                Item('r', editor=RangeEditor(low=20.0, high=36.0)),
+                Item('b', editor=RangeEditor(low=0.0, high=5.0)))
+\end{lstlisting}
+\end{frame}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Chaco}
