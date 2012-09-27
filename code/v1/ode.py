@@ -49,6 +49,10 @@ class LorenzEquation(ODE):
                 Item('r', editor=RangeEditor(low=20.0, high=36.0)),
                 Item('b', editor=RangeEditor(low=0.0, high=5.0)))
 
+    @on_trait_change('s,r,b')
+    def _on_params_changed(self):
+        self.eqn_changed = True
+
     def eval(self, X, t):
         x, y, z = X[0], X[1], X[2]
         return numpy.array([self.s*(y-x),
@@ -152,7 +156,7 @@ class ODESolver(HasTraits):
 
     t_low = Float(0)
     t_high = Float(10)
-    t_num = Int(100)
+    t_num = Int(1000)
 
     view = View('initial_state',
                 't_low',

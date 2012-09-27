@@ -53,15 +53,17 @@ class ODEPlot3D(HasTraits):
     def _on_name_changed(self, obj, name, old, new):
         self._set_arr(new, name[:-5])
 
-    def _set_arr(self, name, key='index'):
+    def _set_arr(self, name, key='index', notify=True):
         if name == self.ode.t_var:
             arr = self.ode_soln.t_arr
         else:
             arr = self.ode_soln.soln_arr[:, self.ode.vars.index(name)]
-        self.trait_set(**{key+'_arr':arr})
+        self.trait_set(notify, **{key+'_arr':arr})
 
     @on_trait_change('ode_soln.soln_arr')
     def _on_soln_changed(self):
+        if self.s_name == '':
+            return
         self._set_arr(self.x_name, 'x')
         self._set_arr(self.y_name, 'y')
         self._set_arr(self.z_name, 'z')
@@ -69,16 +71,20 @@ class ODEPlot3D(HasTraits):
 
     @on_trait_change('x_arr,y_arr,z_arr,s_arr')
     def _on_arr_changed(self, obj, name, old, new):
-        self.plot3d.mlab_source.set(x=self.x_arr, y=self.y_arr, z=self.z_arr, s=self.s_arr)
+        if self.x_arr.shape == self.y_arr.shape == self.z_arr.shape == self.s_arr.shape:
+            if old.shape == new.shape:
+                self.plot3d.mlab_source.set(x=self.x_arr, y=self.y_arr, z=self.z_arr, s=self.s_arr)
+            else:
+                self.plot3d.remove()
+                self.plot3d = self._plot3d_default()
 
     @on_trait_change('scene.activated')
     def update_flow(self):
         n = len(self.name_list)
-        self.x_name = self.name_list[1%n]
-        self.y_name = self.name_list[2%n]
-        self.z_name = self.name_list[3%n]
-        self.s_name = self.name_list[0]
-        print self.x_arr.shape, self.y_arr.shape, self.z_arr.shape, self.s_arr.shape
+        self.trait_set(x_name=self.name_list[1%n],
+                       y_name=self.name_list[2%n],
+                       z_name=self.name_list[3%n],
+                       s_name=self.name_list[0])
         self.plot3d.mlab_source.set(x=self.x_arr, y=self.y_arr, z=self.z_arr, s=self.s_arr)
 
     def _plot3d_default(self):
@@ -98,7 +104,6 @@ if __name__ == '__main__':
     ode = EpidemicODE()
     ode = LorenzEquation()
     #ode = GenericODE()
-    #ode.configure_traits()
     soln = ODESolver(ode=ode, initial_state=[10.,50.,50.], t_arr=numpy.linspace(0,10,1001))
     plot = ODEPlot3D(ode_soln=soln)
     plot.configure_traits()

@@ -36,5 +36,6 @@ class ODEApp(HasTraits):
         return ODEPlot3D(ode_soln=self.solver)
 
 if __name__ == '__main__':
-    odeapp = ODEApp()
+    from ode import LorenzEquation
+    odeapp = ODEApp(ode=LorenzEquation())
     odeapp.configure_traits()
