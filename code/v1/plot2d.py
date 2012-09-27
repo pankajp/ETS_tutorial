@@ -35,12 +35,7 @@ class ODEPlot(HasTraits):
 
     @cached_property
     def _get_name_list(self):
-        names = ['time']
-        if isinstance(self.ode.vars, basestring):
-            names.append(self.ode.vars)
-        else:
-            names.extend(self.ode.vars)
-        return names
+        return ['time'] + self.ode.vars
 
     @on_trait_change('index_name,value_name')
     def _on_name_changed(self, obj, name, old, new):
@@ -53,8 +48,10 @@ class ODEPlot(HasTraits):
     def _set_arr(self, name, key='index'):
         if name in ['t', 'time']:
             arr = self.solver.t
-        else:
+        elif name in self.ode.vars:
             arr = self.solver.solution[:, self.ode.vars.index(name)]
+        else:
+            return
         self.trait_set(**{key+'_arr':arr})
 
     @on_trait_change('solver.solution')

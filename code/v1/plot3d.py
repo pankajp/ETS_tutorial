@@ -53,12 +53,14 @@ class ODEPlot3D(HasTraits):
     def _on_name_changed(self, obj, name, old, new):
         self._set_arr(new, name[:-5])
 
-    def _set_arr(self, name, key='index', notify=True):
+    def _set_arr(self, name, key):
         if name in ['t', 'time']:
             arr = self.solver.t
-        else:
+        elif name in self.ode.vars:
             arr = self.solver.solution[:, self.ode.vars.index(name)]
-        self.trait_set(notify, **{key+'_arr':arr})
+        else:
+            return
+        self.trait_set(**{key+'_arr':arr})
 
     @on_trait_change('solver.solution')
     def _on_solution_changed(self):
@@ -93,19 +95,11 @@ class ODEPlot3D(HasTraits):
                                         self.s_arr, tube_radius=0.1)
         return plot3d
 
-    def _index_name_default(self):
-        return self.name_list[0]
-
-    def _value_name_default(self):
-        return self.name_list[-1]
-
-
 if __name__ == '__main__':
     from ode import EpidemicODE, LorenzEquation, GenericODE
     import numpy
     ode = EpidemicODE()
     ode = LorenzEquation()
-    #ode = GenericODE()
     solver = ODESolver(ode=ode, initial_state=[10.,50.,50.], 
                        t=numpy.linspace(0,10,1001))
     plot = ODEPlot3D(solver=solver)
