@@ -643,12 +643,12 @@ class LorenzEquation(HasTraits):
 class ODESolver(HasTraits):
     ode = Instance(ODE)
     initial_state = Either(Float, Array)
-    t_arr = Array
+    t = Array
 \end{lstlisting}
 \pause
 \begin{lstlisting}
     solution = Property(Array, 
-            depends_on='initial_state, t_arr, ode')
+            depends_on='initial_state, t, ode')
 \end{lstlisting}
 \pause
 \begin{lstlisting}
@@ -662,7 +662,7 @@ class ODESolver(HasTraits):
         """
         from scipy.integrate import odeint
         return odeint(self.ode.eval, self.initial_state, 
-                      self.t_arr)
+                      self.t)
 \end{lstlisting}
 \end{frame}
 
@@ -694,8 +694,11 @@ class TestLorenzEquation(unittest.TestCase):
 \begin{frame}[plain]
     \frametitle{Exercise}
   \begin{block}{Solve an ODE}
-      Use the given skeleton code of the ODE equation and the solver.
-      Put them together to get a solution.  Print the final solution.
+
+      Use the given skeleton code of the ODE equation (\typ{solve_ode.py}) and
+      the solver. Put them together to get a solution.  Print the final
+      solution.
+      
   \end{block}  
 \end{frame}
 
@@ -827,10 +830,9 @@ class LorenzEquation(ODE):
 \begin{frame}[plain]
     \frametitle{Exercise}
   \begin{block}{Customize the view for Lorenz equation}
-      XXX
-      Use the given template and other modules and get the
-      solution for the \ldots
-  \end{block}
+  Use the existing \typ{solve_ode.py} file and setup the views for one
+  or more of the classes (as many as you are able).
+ \end{block}
 \end{frame}
 
 
@@ -1139,6 +1141,16 @@ class Plot3D(HasTraits):
       \item Exercise for you!
  \end{itemize}
 \end{frame}
+
+\begin{frame}[plain]
+    \frametitle{Exercise}
+\normalsize
+  \begin{block}{ODE application}
+  Given the existing code, in \typ{solve_ode.py} and \typ{embed_3d_ex.py}
+  create a UI for the Lorenz equation along with the solver and a 3D or 2D plot.
+  \end{block}
+\end{frame}
+
 
 \begin{frame}
   \frametitle{So what?}
