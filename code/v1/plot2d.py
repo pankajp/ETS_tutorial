@@ -44,6 +44,10 @@ class ODEPlot(HasTraits):
     @on_trait_change('index_name,value_name')
     def _on_name_changed(self, obj, name, old, new):
         self._set_arr(new, name[:-5])
+        if name == 'index_name':
+            self.plot.x_axis.title = new
+        else:
+            self.plot.y_axis.title = new
 
     def _set_arr(self, name, key='index'):
         if name == self.ode.t_var:
@@ -68,6 +72,8 @@ class ODEPlot(HasTraits):
         plot.tools.append(TraitsTool(component=plot))
         plot.tools.append(ZoomTool(component=plot))
         plot.tools.append(PanTool(component=plot))
+        plot.x_axis.title = self.index_name
+        plot.y_axis.title = self.value_name
         plot.plot(('index', 'value'))
         return plot
 
