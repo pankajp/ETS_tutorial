@@ -506,7 +506,7 @@ obj.on_trait_change(handler,
 
 \begin{frame}[fragile,plain]
   \frametitle{Notification Example}
-\vspace*{-16pt}
+\vspace*{-8pt}
 \footnotesize
 \begin{lstlisting}
 from traits.api import (Delegate, HasTraits, 
@@ -540,6 +540,7 @@ c.on_trait_change(handler, ['father', 'age'])
   \frametitle{Designing the ODE explorer app}
   \Large
 \begin{center}
+    \pause
     \myemph{Think!}
 
     \vspace*{1in}
@@ -550,7 +551,7 @@ c.on_trait_change(handler, ['father', 'age'])
 \begin{frame}
   \frametitle{Object model}
   \begin{itemize}
-      \item A class to represent the equation and parameters?
+      \item A class to represent the equation and parameters
       \item A class for the ODE solution
       \item Make sure it works -- TDD
  \end{itemize}
@@ -695,9 +696,8 @@ class TestLorenzEquation(unittest.TestCase):
 \begin{frame}[plain]
     \frametitle{Exercise}
   \begin{block}{Solve an ODE}
-      XXX
-      Use the given template and other modules and get the
-      solution for the \ldots
+      Use the given skeleton code of the ODE equation and the solver.
+      Put them together to get a solution.  Print the final solution.
   \end{block}  
 \end{frame}
 
