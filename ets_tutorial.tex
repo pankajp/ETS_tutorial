@@ -509,8 +509,6 @@ obj.on_trait_change(handler,
 \vspace*{-8pt}
 \footnotesize
 \begin{lstlisting}
-from traits.api import (Delegate, HasTraits, 
-    Instance, Int, Str, on_trait_change)
 class Parent(HasTraits):
     last_name = Str('') 
 class Child(HasTraits):
@@ -531,7 +529,6 @@ def handler(obj, name, old, new):
 
 c = Child(father=Parent(last_name='Ram'))
 c.on_trait_change(handler, ['father', 'age'])
-
 \end{lstlisting}
 \end{frame}
 
@@ -540,8 +537,8 @@ c.on_trait_change(handler, ['father', 'age'])
   \frametitle{Designing the ODE explorer app}
   \Large
 \begin{center}
-    \pause
     \myemph{Think!}
+    \pause
 
     \vspace*{1in}
     Focus on the object model
@@ -673,9 +670,9 @@ class ODESolver(HasTraits):
 class TestLorenzEquation(unittest.TestCase):
     def setUp(self):
         self.ode = LorenzEquation()
-        self.solver = ODESolver(ode=self.ode, 
-                initial_state=[10.,50.,50.], 
-                t_arr=numpy.linspace(0,10,1001))
+        self.solver = ODESolver(ode=self.ode)
+        self.solver.initial_state = [10.,50.,50.]
+        self.solver.t = numpy.linspace(0, 10, 1001)
 
     def test_eval(self):
         dX = self.ode.eval(self.solver.initial_state, 0.0)
@@ -684,7 +681,7 @@ class TestLorenzEquation(unittest.TestCase):
         self.assertAlmostEqual(dX[2], 1100/3.)
 
     def test_solve(self):
-        soln = self.solver.soln_arr[1,:]
+        soln = self.solver.solution[1,:]
         self.assertAlmostEqual(soln[0], 13.65484958)
         self.assertAlmostEqual(soln[1], 46.64090341)
         self.assertAlmostEqual(soln[2], 54.35797299)
@@ -851,7 +848,7 @@ class LorenzEquation(ODE):
 \end{frame}
 
 \begin{frame}
-  \frametitle{Chaco Interactive Plot Examples}
+  \frametitle{Chaco Interactive Plotting}
 \scriptsize
 \url{http://docs.enthought.com/chaco/user_manual/annotated_examples.html}
 \begin{center}
@@ -859,6 +856,19 @@ class LorenzEquation(ODE):
     \includegraphics[height=2in, interpolate=true]{images/chaco_cmapi}
 \end{center}
 \end{frame}
+
+\begin{frame}
+  \frametitle{Core Ideas}
+  \begin{itemize}
+      \item Plots are compositions of visual components
+
+      \item Separation between data and screen space
+
+      \item Modular design and extensible classes
+
+  \end{itemize}
+\end{frame}
+
 
 
 \begin{frame}
@@ -879,7 +889,7 @@ class LorenzEquation(ODE):
 \end{frame}
 
 \begin{frame}[fragile,plain]
-\frametitle{Simple LinePlot}
+\frametitle{Simple Plotting with Chaco}
 \footnotesize
 \begin{lstlisting}
 class LinePlot(HasTraits):
@@ -902,56 +912,26 @@ class LinePlot(HasTraits):
 \end{lstlisting}
 \end{frame}
 
-%
-%\begin{frame}[fragile,plain]
-%\frametitle{Plotting the ODE Solution}
-%\scriptsize
-%The Plot view, plot and the old solution. ODE can be obtained from ODESolver,
-%so it can be a property.
-%XXX: tmpl
-%\begin{lstlisting}
-%class ODEPlot(HasTraits):
-%    """ A 2D plot of ode solution variables. """
-%    plot = Instance(Component)
-%    # We need to set data when solution changes
-%    pd = Instance(ArrayPlotData, args=())
-%
-%    ode = Property(Instance(ODE), depends_on='ode_soln')
-%    ode_soln = Instance(ODESolver)
-%    traits_view = View(Item('plot', editor=ComponentEditor(),
-%                            show_label=False),
-%                       resizable=True, title="ODE Solution")
-%
-%    def _get_ode(self):
-%        return self.ode_soln and self.ode_soln.ode
-%    ...
-%    def _set_arr(self, name, key='index'):
-%        if name == self.ode.t_var:
-%            arr = self.ode_soln.t_arr
-%        else:
-%            arr = self.ode_soln.soln_arr[:, self.ode.vars.index(name)]
-%        self.trait_set(**{key+'_arr':arr})
-%
-%    @on_trait_change('ode_soln.soln_arr')
-%    def _on_soln_changed(self):
-%        self.pd.set_data('index', self.ode_soln.t_arr)
-%        self.pd.set_data('index', self.ode_soln.soln_arr[:, 0])
-%
-%    def _plot_default(self):
-%        plot = Plot(self.pd)
-%        plot.tools.append(TraitsTool(component=plot))
-%        plot.tools.append(ZoomTool(component=plot))
-%        plot.tools.append(PanTool(component=plot))
-%        plot.plot(('index', 'value'))
-%        return plot
-%\end{lstlisting}
-%\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Chaco Data Model}
+\begin{center}
+    \includegraphics[height=3in, interpolate=true]{images/chaco_data_model}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Commonly used Classes}
+\begin{center}
+    \includegraphics[height=3in, interpolate=true]{images/chaco_classes}
+\end{center}
+\end{frame}
 
 
 \begin{frame}[fragile,plain]
 \frametitle{Plotting the ODE Solution}
 
-The Plot view, plot and the old solution. ODE can be obtained from ODESolver,
+The Plot view, plot and the ODE solution. ODE can be obtained from ODESolver,
 so it can be a property.
 
 \footnotesize
@@ -962,11 +942,11 @@ class ODEPlot(HasTraits):
     # We need to set data when solution changes
     pd = Instance(ArrayPlotData, args=())
 
-    ode = Property(Instance(ODE), depends_on='ode_soln')
-    ode_soln = Instance(ODESolver)
+    ode = Property(Instance(ODE), depends_on='solver')
+    solver = Instance(ODESolver)
 
     def _get_ode(self):
-        return self.ode_soln and self.ode_soln.ode
+        return self.solver and self.solver.ode
     ...
 \end{lstlisting}
 \end{frame}
@@ -984,15 +964,31 @@ class ODEPlot(HasTraits):
             resizable=True, title="ODE Solution")
 
     def _plot_default(self):
-        self.pd.set_data('index', self.ode_soln.t_arr)
+        self.pd.set_data('index', self.solver.t)
         # Set the first array as value array for plot.
-        self.pd.set_data('value', self.ode_soln.soln_arr[:,0])
+        self.pd.set_data('value',
+                         self.solver.solution[:,0])
         plot = Plot(self.pd)
+        plot.plot(('index', 'value'))
+        return plot
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Adding some interactivity and labels}
+Use Chaco Tools
+\footnotesize
+\begin{lstlisting}
+    ...
+    def _plot_default(self):
+        ...
         # Add some interactivity to the plots.
-        plot.tools.append(TraitsTool(component=plot))
         plot.tools.append(ZoomTool(component=plot))
         plot.tools.append(PanTool(component=plot))
-        plot.plot(('index', 'value'))
+        plot.tools.append(TraitsTool(component=plot))
+        plot.x_axis.title = 'time'
+        plot.y_axis.title = 'x'
+        plot.title = self.ode.name
         return plot
 \end{lstlisting}
 \end{frame}
@@ -1005,12 +1001,12 @@ We can make the plot react to changes to the solution
 \begin{lstlisting}
 class ODEPlot(HasTraits):
     ...
-    @on_trait_change('ode_soln.soln_arr')
+    @on_trait_change('solver.solution')
     def _on_soln_changed(self):
         self.pd.set_data('index', 
-                self.ode_soln.t_arr)
+                self.solver.t)
         self.pd.set_data('value', 
-                self.ode_soln.soln_arr[:, 0])
+                self.solver.solution[:, 0])
 \end{lstlisting}
 \end{frame}
 
@@ -1140,6 +1136,8 @@ class Plot3D(HasTraits):
       \item Easy to put this together
       \item Exercise for you!
  \end{itemize}
+\vspace{0.5in}
+{\footnotesize \textbf{Hint:} Compose various views using InstanceEditor with '\emph{custom}' style!}
 \end{frame}
 
 \begin{frame}[plain]

@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 
 import numpy as np
 
 from traits.api import (Either, HasTraits, List, Str, Range, Instance, Float,
         Array, Property, cached_property)
+
+from traitsui.api import View, Item, RangeEditor
 
 class ODE(HasTraits):
     """ An ODE of the form dX/dt = f(X) """
@@ -19,8 +22,13 @@ class LorenzEquation(ODE):
     vars = ['x', 'y', 'z']
     s = Range(0.0, 20.0, 10.0, 
               desc='the parameter s')
-    r = Range(0.0, 50.0, 28.0)
-    b = Range(0.0, 10.0, 8./3)
+    r = Float(28.0)
+    b = Float(8./3)
+
+    view = View(Item('s'),
+                Item('r'),
+                Item('b'),
+                title='Lorenz equation')
 
     def eval(self, X, t):
         x, y, z = X[0], X[1], X[2]
@@ -28,6 +36,11 @@ class LorenzEquation(ODE):
         v = self.r*x - y - x*z
         w = x*y - self.b*z
         return np.array([u, v, w])
+
+lorentz_view = View(Item('s'),
+                    Item('r', editor=RangeEditor(low=20.0, high=36.0)),
+                    Item('b'),
+                    title='Lorenz equation')
 
 
 class ODESolver(HasTraits):
@@ -52,4 +65,6 @@ class ODESolver(HasTraits):
 
 if __name__ == '__main__':
     ode = LorenzEquation()
+    ode.configure_traits()
+    ode.configure_traits(view=lorentz_view)
     solver = ODESolver(ode=ode, initial_state=[10.,50.,50.], t=np.linspace(0,10,1001))

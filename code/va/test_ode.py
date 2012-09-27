@@ -1,6 +1,5 @@
 
 import unittest
-import numpy
 
 from ode import LorenzEquation, ODESolver
 
@@ -10,7 +9,6 @@ class TestLorenzEquation(unittest.TestCase):
         self.ode = LorenzEquation()
         self.solver = ODESolver(ode=self.ode)
         self.solver.initial_state = [10.,50.,50.]
-        self.solver.t = numpy.linspace(0, 10, 1001)
 
     def test_eval(self):
         dX = self.ode.eval(self.solver.initial_state, 0.0)
