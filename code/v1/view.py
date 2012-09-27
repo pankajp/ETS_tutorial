@@ -21,6 +21,7 @@ class ODEApp(HasTraits):
                                     ),
                               Tabbed(Item('plot', style='custom'),
                                      Item('plot3d', style='custom'),
+                                     dock='tab',
                                      show_labels=False),
                               id='example.ODEAPP.panels',
                               show_labels=False),
