@@ -1,5 +1,6 @@
 
-from traits.api import HasTraits, Instance, Str, Property, Array, on_trait_change, cached_property, List
+from traits.api import HasTraits, Instance, Str, Property, Array, \
+    on_trait_change, cached_property, List
 from traitsui.api import View, Item, HGroup, EnumEditor
 from enable.api import Component, ComponentEditor
 from chaco.api import Plot, ArrayPlotData
@@ -18,10 +19,10 @@ class ODEPlot(HasTraits):
     index_name = Str
     value_name = Str
 
-    name_list = Property(List(Str), depends_on='ode.t_var, ode.vars')
+    name_list = Property(List(Str), depends_on='ode.vars')
 
-    ode = Property(Instance(ODE), depends_on='ode_soln')
-    ode_soln = Instance(ODESolver)
+    ode = Property(Instance(ODE), depends_on='solver')
+    solver = Instance(ODESolver)
     traits_view = View(Item('plot', editor=ComponentEditor(),
                             show_label=False),
                        HGroup(Item('index_name', editor=EnumEditor(name='name_list')),
@@ -30,11 +31,11 @@ class ODEPlot(HasTraits):
                        title="ODE Solution")
 
     def _get_ode(self):
-        return self.ode_soln and self.ode_soln.ode
+        return self.solver and self.solver.ode
 
     @cached_property
     def _get_name_list(self):
-        names = [self.ode.t_var]
+        names = ['time']
         if isinstance(self.ode.vars, basestring):
             names.append(self.ode.vars)
         else:
@@ -50,13 +51,13 @@ class ODEPlot(HasTraits):
             self.plot.y_axis.title = new
 
     def _set_arr(self, name, key='index'):
-        if name == self.ode.t_var:
-            arr = self.ode_soln.t_arr
+        if name in ['t', 'time']:
+            arr = self.solver.t
         else:
-            arr = self.ode_soln.soln_arr[:, self.ode.vars.index(name)]
+            arr = self.solver.solution[:, self.ode.vars.index(name)]
         self.trait_set(**{key+'_arr':arr})
 
-    @on_trait_change('ode_soln.soln_arr')
+    @on_trait_change('solver.solution')
     def _on_soln_changed(self):
         self._set_arr(self.index_name, 'index')
         self._set_arr(self.value_name, 'value')
@@ -90,7 +91,8 @@ if __name__ == '__main__':
     ode = EpidemicODE()
     ode = LorenzEquation()
     ode.configure_traits()
-    soln = ODESolver(ode=ode, initial_state=[10.,50.,50.], t_arr=numpy.linspace(0,10,1001))
-    plot = ODEPlot(ode_soln=soln)
+    solver = ODESolver(ode=ode, initial_state=[10.,50.,50.], 
+                       t=numpy.linspace(0,10,1001))
+    plot = ODEPlot(solver=solver)
     plot.configure_traits()
 

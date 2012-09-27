@@ -2,17 +2,18 @@
 import numpy
 from functools import wraps
 from scipy.integrate import odeint
-from traits.api import HasTraits, Str, Either, List, Instance, Float, Array, Int, Property, cached_property, Expression, on_trait_change, Event, Bool
+from traits.api import (HasTraits, Str, List, Instance, Float, Array, Int, 
+        Property, cached_property, Expression, on_trait_change, Event, Bool)
 from traitsui.api import View, Item, RangeEditor
 
 
 class ODE(HasTraits):
-    """ An ODE of the form dX/dt = f(X) """
+    """ An ODE of the form dX/dt = f(X).
+    """
     name = Str
     num_vars = Int(0)
     vars = List(Str, desc='The names of the variables of X vector')
-    t_var = Str('Time')
-    eqn_changed = Event
+    changed = Event
     error = Bool(False)
 
     def eval(self, X, t):
@@ -20,7 +21,7 @@ class ODE(HasTraits):
         raise NotImplementedError
 
     def default_domain(self):
-        return [(0.0,10.0) for i in range(self.num_vars)]
+        return [(0.0,10.0) for i in range(len(self.vars))]
 
 class EpidemicODE(ODE):
     """ The spread of an epidemic in a population
@@ -51,7 +52,7 @@ class LorenzEquation(ODE):
 
     @on_trait_change('s,r,b')
     def _on_params_changed(self):
-        self.eqn_changed = True
+        self.changed = True
 
     def eval(self, X, t):
         x, y, z = X[0], X[1], X[2]
@@ -113,14 +114,14 @@ class GenericODE(ODE):
     equations = List(Str)
     initial_state = Array
 
-    view = View('name',
-                'num_vars',
-                'equations',
+    view = View(Item('name'),
+                Item('num_vars', label='Number of variables'),
+                Item('equations'),
                 resizable=True)
 
     @check_error
     def eval(self, X, t):
-        localdict = {self.t_var:t}
+        localdict = {'t':t}
         for i, var in enumerate(self.vars):
             localdict[var] = X[..., i]
         return numpy.array([eval(self.equations[i], numpy.__dict__, localdict)
@@ -128,7 +129,7 @@ class GenericODE(ODE):
 
     @on_trait_change('equations[]')
     def _on_equations_changed(self):
-        self.eqn_changed = True
+        self.changed = True
 
     @on_trait_change('num_vars')
     def _on_num_vars_changed(self, object, name, old, new):
@@ -151,8 +152,8 @@ class ODESolver(HasTraits):
     """ A single solution state of the ODE (fixed initial condn.) """
     ode = Instance(ODE)
     initial_state = List
-    t_arr = Array
-    soln_arr = Property(Array, depends_on='initial_state, t_arr, ode.eqn_changed')
+    t = Array
+    solution = Property(Array, depends_on='initial_state, t, ode.changed')
 
     t_low = Float(0)
     t_high = Float(10)
@@ -171,7 +172,7 @@ class ODESolver(HasTraits):
         self.initial_state = [(d[0]+d[1])/2.0 for d in defaults]
 
     @cached_property
-    def _get_soln_arr(self):
+    def _get_solution(self):
         try:
             return self.solve()
         except Exception as e:
@@ -183,20 +184,20 @@ class ODESolver(HasTraits):
         specified times t. """
         return odeint(self.ode.eval,
                        numpy.array(self.initial_state, dtype='float'),
-                       self.t_arr)
+                       self.t)
 
-    def _t_arr_default(self):
+    def _t_default(self):
         return numpy.linspace(self.t_low, self.t_high, self.t_num+1) 
 
     @on_trait_change('t_low, t_high, t_num')
-    def _change_t_arr(self):
-        self.t_arr = self._t_arr_default()
+    def _change_t(self):
+        self.t = self._t_default()
 
 if __name__ == '__main__':
     ode = GenericODE()
     ode.configure_traits()
-    soln = ODESolver(ode=ode, initial_state=[250])
+    solver = ODESolver(ode=ode, initial_state=[250])
     from matplotlib import pyplot
-    fig = pyplot.plot(soln.t_arr, soln.soln_arr)
+    fig = pyplot.plot(solver.t, solver.solution)
     pyplot.show()
 

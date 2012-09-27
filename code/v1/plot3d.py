@@ -24,10 +24,10 @@ class ODEPlot3D(HasTraits):
 
     plot3d = Any
 
-    name_list = Property(List(Str), depends_on='ode.t_var, ode.vars')
+    name_list = Property(List(Str), depends_on='ode.vars')
 
-    ode = Property(Instance(ODE), depends_on='ode_soln')
-    ode_soln = Instance(ODESolver)
+    ode = Property(Instance(ODE), depends_on='solver')
+    solver = Instance(ODESolver)
     traits_view = View(Item('scene', editor=SceneEditor(scene_class=MayaviScene),
                             show_label=False),
                        HGroup(Item('x_name', editor=EnumEditor(name='name_list')),
@@ -38,11 +38,11 @@ class ODEPlot3D(HasTraits):
                        title="ODE Solution")
 
     def _get_ode(self):
-        return self.ode_soln and self.ode_soln.ode
+        return self.solver and self.solver.ode
 
     @cached_property
     def _get_name_list(self):
-        names = [self.ode.t_var]
+        names = ['time']
         if isinstance(self.ode.vars, basestring):
             names.append(self.ode.vars)
         else:
@@ -54,14 +54,14 @@ class ODEPlot3D(HasTraits):
         self._set_arr(new, name[:-5])
 
     def _set_arr(self, name, key='index', notify=True):
-        if name == self.ode.t_var:
-            arr = self.ode_soln.t_arr
+        if name in ['t', 'time']:
+            arr = self.solver.t
         else:
-            arr = self.ode_soln.soln_arr[:, self.ode.vars.index(name)]
+            arr = self.solver.solution[:, self.ode.vars.index(name)]
         self.trait_set(notify, **{key+'_arr':arr})
 
-    @on_trait_change('ode_soln.soln_arr')
-    def _on_soln_changed(self):
+    @on_trait_change('solver.solution')
+    def _on_solution_changed(self):
         if self.s_name == '':
             return
         self._set_arr(self.x_name, 'x')
@@ -73,10 +73,11 @@ class ODEPlot3D(HasTraits):
     def _on_arr_changed(self, obj, name, old, new):
         if self.x_arr.shape == self.y_arr.shape == self.z_arr.shape == self.s_arr.shape:
             if old.shape == new.shape:
-                self.plot3d.mlab_source.set(x=self.x_arr, y=self.y_arr, z=self.z_arr, s=self.s_arr)
+                self.plot3d.mlab_source.set(x=self.x_arr, y=self.y_arr, 
+                                            z=self.z_arr, s=self.s_arr)
             else:
-                self.plot3d.remove()
-                self.plot3d = self._plot3d_default()
+                self.plot3d.mlab_source.reset(x=self.x_arr, y=self.y_arr, 
+                                              z=self.z_arr, s=self.s_arr)
 
     @on_trait_change('scene.activated')
     def update_flow(self):
@@ -88,7 +89,8 @@ class ODEPlot3D(HasTraits):
         self.plot3d.mlab_source.set(x=self.x_arr, y=self.y_arr, z=self.z_arr, s=self.s_arr)
 
     def _plot3d_default(self):
-        plot3d = self.scene.mlab.plot3d(self.x_arr, self.y_arr, self.z_arr, self.s_arr, tube_radius=0.1)
+        plot3d = self.scene.mlab.plot3d(self.x_arr, self.y_arr, self.z_arr, 
+                                        self.s_arr, tube_radius=0.1)
         return plot3d
 
     def _index_name_default(self):
@@ -104,7 +106,8 @@ if __name__ == '__main__':
     ode = EpidemicODE()
     ode = LorenzEquation()
     #ode = GenericODE()
-    soln = ODESolver(ode=ode, initial_state=[10.,50.,50.], t_arr=numpy.linspace(0,10,1001))
-    plot = ODEPlot3D(ode_soln=soln)
+    solver = ODESolver(ode=ode, initial_state=[10.,50.,50.], 
+                       t=numpy.linspace(0,10,1001))
+    plot = ODEPlot3D(solver=solver)
     plot.configure_traits()
 

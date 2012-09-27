@@ -1,9 +1,6 @@
 
-from traits.api import HasTraits, Instance, Str, Property, Array, on_trait_change, cached_property, List, DelegatesTo
-from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, HSplit, VSplit, Tabbed
-from enable.api import Component, ComponentEditor
-from chaco.api import Plot, ArrayPlotData
-from chaco.tools.api import TraitsTool, ZoomTool, PanTool
+from traits.api import HasTraits, Instance
+from traitsui.api import View, Item, HSplit, VSplit, Tabbed, Group
 
 from ode import ODE, ODESolver, GenericODE
 from plot2d import ODEPlot
@@ -15,12 +12,20 @@ class ODEApp(HasTraits):
     plot = Instance(ODEPlot)
     plot3d = Instance(ODEPlot3D)
 
-    traits_view = View(HSplit(VSplit(Item('ode', style='custom'),
-                                     Item('solver', style='custom')),
+    traits_view = View(HSplit(VSplit([Group(Item('ode', style='custom', 
+                                                show_label=False),
+                                           label='ODE'),
+                                     Group(Item('solver', style='custom',
+                                                show_label=False),
+                                                label='Solver')],
+                                    ),
                               Tabbed(Item('plot', style='custom'),
-                                     Item('plot3d', style='custom')),
+                                     Item('plot3d', style='custom'),
+                                     show_labels=False),
+                              id='example.ODEAPP.panels',
                               show_labels=False),
                        width=800, height=700, resizable=True,
+                       id='example.ODEApp',
                        title="ODE Solution")
 
     def _ode_default(self):
@@ -30,10 +35,10 @@ class ODEApp(HasTraits):
         return ODESolver(ode=self.ode)
 
     def _plot_default(self):
-        return ODEPlot(ode_soln=self.solver)
+        return ODEPlot(solver=self.solver)
 
     def _plot3d_default(self):
-        return ODEPlot3D(ode_soln=self.solver)
+        return ODEPlot3D(solver=self.solver)
 
 if __name__ == '__main__':
     from ode import LorenzEquation
