@@ -591,8 +591,6 @@ class ODE(HasTraits):
     name = Str
     vars = Either(List(Str), Str, 
                   desc='The names of variables')
-    t_var = Str('Time')
-
     def eval(self, X, t):
         """ Evaluate the derivative, f(X). 
         """
