@@ -188,7 +188,7 @@ September 28, 2012
 \end{frame}
 
 \begin{frame}
-  \frametitle{Why}
+  \frametitle{Why?}
   \begin{itemize}
   \item Something interesting and concrete
   \item Same ideas extend to other situations
@@ -233,6 +233,7 @@ September 28, 2012
 \item Use $L = 2.5E5, k = 3E-5, y(0) = 250$
 \item Define a function as below
 \end{itemize}
+\small
 \begin{lstlisting}
 In []: from scipy.integrate import odeint
 In []: def epid(y, t):
@@ -343,11 +344,10 @@ In []: plot(t, y)
 
 \begin{frame}[plain,fragile]
     \frametitle{Solution}
-\footnotesize
+\small
   \begin{lstlisting}
 import numpy as np
 from scipy.integrate import odeint
-
 def lorenz(r, t s=10.,r=28., b=8./3.):
     x, y, z = r
     u = s*(y-x)
@@ -390,7 +390,7 @@ from mayavi import mlab
   \frametitle{ETS: Enthought Tool Suite}
   \begin{itemize}
     \item Traits: Object Models
-    \item TraitsUI: Views for Traits Objects
+    \item TraitsUI: Views for Objects having Traits
     \item Chaco: 2D Visualizations
     \item Mayavi: 3D Visualizations
     \item Envisage: Application Framework
@@ -407,8 +407,7 @@ from mayavi import mlab
 \begin{frame}
   \frametitle{Introduction to Traits}
   \begin{itemize}
-    \item A \alert{trait} is a type definition that can be used for normal
-        Python object attributes giving them additional characteristics.
+    \item  \alert{trait}: Python object attribute with additional characteristics
     \vspace*{2em}
 
     \item \url{http://code.enthought.com/projects/traits}
@@ -481,12 +480,12 @@ In []: moe.configure_traits() # Visualization
     \vspace*{-6pt}
     \small
     \begin{itemize}
-        \item Standard: Bool, Int, Float, Str, Tuple, List, Dict
-        \item Constrained: Range, Regex, Expression, ReadOnly
-        \item Special: Either, Enum, Array, File, Color, Font
-        \item Generic: Instance, Any, Callable
+        \item Standard: \typ{Bool, Int, Float, Str, Tuple, List, Dict}
+        \item Constrained: \typ{Range, Regex, Expression, ReadOnly}
+        \item Special: \typ{Either, Enum, Array, File, Color, Font}
+        \item Generic: \typ{Instance, Any, Callable}
         \item ...
-        \item custom traits
+        \item Custom traits: 2D/3D plots etc.
     \end{itemize}
 \end{frame}
 
@@ -495,10 +494,45 @@ In []: moe.configure_traits() # Visualization
     \vspace*{-6pt}
     \small
     \begin{itemize}
-        \item Static: def \_<trait\_name>\_changed()
-        \item Decorator: @on\_trait\_change('extended.trait[].name')
-        \item Dynamic: myobject.on\_trait\_change(handler, 'extended.trait[].name')
+        \item Static: \typ{def _<trait_name>_changed()}
+        \item Decorator: \typ{@on_trait_change('extended.trait[].name')}
+        \item Dynamic:
     \end{itemize}
+\begin{lstlisting}
+obj.on_trait_change(handler, 
+                    ['extended.trait[].name'])
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+  \frametitle{Notification Example}
+\vspace*{-16pt}
+\footnotesize
+\begin{lstlisting}
+from traits.api import (Delegate, HasTraits, 
+    Instance, Int, Str, on_trait_change)
+class Parent(HasTraits):
+    last_name = Str('') 
+class Child(HasTraits):
+    age = Int
+    father = Instance(Parent)
+\end{lstlisting}
+\pause
+\begin{lstlisting}
+    def _age_changed(self, old, new):
+        print 'Age changed from %s to %s ' % (old, new)
+
+    @on_trait_change('father.last_name')
+    def _dad_name_updated(self):
+        print self.father.last_name
+
+def handler(obj, name, old, new):
+    print obj, name, old, new
+
+c = Child(father=Parent(last_name='Ram'))
+c.on_trait_change(handler, ['father', 'age'])
+
+\end{lstlisting}
 \end{frame}
 
 
@@ -507,6 +541,9 @@ In []: moe.configure_traits() # Visualization
   \Large
 \begin{center}
     \myemph{Think!}
+
+    \vspace*{1in}
+    Focus on the object model
 \end{center}
 \end{frame}
 
@@ -515,15 +552,18 @@ In []: moe.configure_traits() # Visualization
   \begin{itemize}
       \item A class to represent the equation and parameters?
       \item A class for the ODE solution
-      \item Make sure it works! - TDD
+      \item Make sure it works -- TDD
  \end{itemize}
 \end{frame}
 
 
 \begin{frame}[fragile,plain]
     \frametitle{Lorenz Equation}
-\scriptsize
+\small
 \begin{lstlisting}
+import numpy as np
+from traits.api import HasTraits, Float
+
 class LorenzEquation(HasTraits):
     s = Float(10)
     r = Float(28)
@@ -531,27 +571,30 @@ class LorenzEquation(HasTraits):
     
     def eval(self, X, t):
         x, y, z = X[0], X[1], X[2]
-        return numpy.array([self.s*(y-x),
-                            self.r*x - y - x*z,
-                            x*y - self.b*z])
+        u = self.s*(y-x)
+        v = self.r*x - y - x*z
+        w = x*y - self.b*z
+        return np.array([u, v, w])
 \end{lstlisting}
 \end{frame}
 
-
 \begin{frame}[fragile,plain]
-\frametitle{ODE Equation model}
-Lets generalize it.
-\scriptsize
+\frametitle{Generalizing the ODE Equation model}
+\small
 \begin{lstlisting}
+from traits.api import (Either, HasTraits, List, 
+    Str)
+
 class ODE(HasTraits):
     """ An ODE of the form dX/dt = f(X) """
     name = Str
-    num_vars = Int
-    vars = Either(List(Str), Str, desc='The names of variables')
+    vars = Either(List(Str), Str, 
+                  desc='The names of variables')
     t_var = Str('Time')
 
     def eval(self, X, t):
-        """ Evaluate the derivative function f(X). """
+        """ Evaluate the derivative, f(X). 
+        """
         raise NotImplementedError
 \end{lstlisting}
 \end{frame}
@@ -559,11 +602,10 @@ class ODE(HasTraits):
 
 \begin{frame}[fragile,plain]
 \frametitle{Lorenz Equation as an ODE Subclass}
-\scriptsize
+\small
 \begin{lstlisting}
 class LorenzEquation(ODE):
     name = 'Lorenz Equation'
-    num_vars = 3
     vars = ['x', 'y', 'z']
     s = Float(10)
     r = Float(28)
@@ -571,45 +613,70 @@ class LorenzEquation(ODE):
 
     def eval(self, X, t):
         x, y, z = X[0], X[1], X[2]
-        return numpy.array([self.s*(y-x),
-                             self.r*x - y - x*z,
-                             x*y - self.b*z])
+        u = self.s*(y-x)
+        v = self.r*x - y - x*z
+        w = x*y - self.b*z
+        return np.array([u, v, w])
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+    \frametitle{Or \dots}
+\small
+\begin{lstlisting}
+from traits.api import HasTraits, Range, # ...
+
+class LorenzEquation(HasTraits):
+    # ...
+    s = Range(0.0, 20.0, 10.0, 
+              desc='the parameter s')
+    r = Range(0.0, 50.0, 28.0)
+    b = Range(0.0, 10.0, 8./3)
+    # ...
 \end{lstlisting}
 \end{frame}
 
 
 \begin{frame}[fragile,plain]
-\frametitle{ODESolver}
-Someone needs to solve the ODE!
-\scriptsize
+\frametitle{Solving the ODE: ODESolver}
+\footnotesize
 \begin{lstlisting}
 class ODESolver(HasTraits):
-    """ A solver for the ODE (fixed initial condn.) """
     ode = Instance(ODE)
     initial_state = Either(Float, Array)
     t_arr = Array
-    soln_arr = Property(Array, depends_on='initial_state, t_arr, ode')
-
+\end{lstlisting}
+\pause
+\begin{lstlisting}
+    solution = Property(Array, 
+            depends_on='initial_state, t_arr, ode')
+\end{lstlisting}
+\pause
+\begin{lstlisting}
     @cached_property
-    def _get_soln_arr(self):
+    def _get_solution(self):
         return self.solve()
 
     def solve(self):
-        """ Solve the ODE and return the values of the solution vector at
-        specified times t. """
-        return odeint(self.ode.eval, self.initial_state, self.t_arr)
+        """ Solve the ODE and return the values 
+        of the solution vector at specified times t. 
+        """
+        from scipy.integrate import odeint
+        return odeint(self.ode.eval, self.initial_state, 
+                      self.t_arr)
 \end{lstlisting}
 \end{frame}
 
 \begin{frame}[fragile,plain]
 \frametitle{Testing}
-Does it work?
-\scriptsize
+\footnotesize
 \begin{lstlisting}
 class TestLorenzEquation(unittest.TestCase):
     def setUp(self):
         self.ode = LorenzEquation()
-        self.solver = ODESolver(ode=self.ode, initial_state=[10.,50.,50.], t_arr=numpy.linspace(0,10,1001))
+        self.solver = ODESolver(ode=self.ode, 
+                initial_state=[10.,50.,50.], 
+                t_arr=numpy.linspace(0,10,1001))
 
     def test_eval(self):
         dX = self.ode.eval(self.solver.initial_state, 0.0)
@@ -625,8 +692,14 @@ class TestLorenzEquation(unittest.TestCase):
 \end{lstlisting}
 \end{frame}
 
-
-
+\begin{frame}[plain]
+    \frametitle{Exercise}
+  \begin{block}{Solve an ODE}
+      XXX
+      Use the given template and other modules and get the
+      solution for the \ldots
+  \end{block}  
+\end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{TraitsUI}
@@ -650,25 +723,117 @@ child.configure_traits()
 \end{lstlisting}
 \pause
 \begin{itemize}
-\item Automatic UI creation with \emph{configure\_traits()}
-\item Automatic sync with model
-\item Automatic sync between different views
+    \item Declarative
+\item Automatic UI creation with \typ{configure_traits()}
+\item Sync with model
+\item Sync between different views
 \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile,plain]
-\frametitle{Lorenz Equation View}
-Configure the parameters of the Lorenz equation \emph{s}, \emph{r} and \emph{b}
-\scriptsize
+\frametitle{Simplest view}
+If you aren't happy with the defaults \dots
+\small
 \begin{lstlisting}
+from traitsui.api import View, Item
 class LorenzEquation(ODE):
-    ...
-    view = View(Item('s', editor=RangeEditor(low=0.0, high=20.0)),
-                Item('r', editor=RangeEditor(low=20.0, high=36.0)),
-                Item('b', editor=RangeEditor(low=0.0, high=5.0)))
+    # ...
+    view = View(Item('s'),
+                Item('r'),
+                Item('b'), 
+                title='Lorenz equation')
 \end{lstlisting}
 \end{frame}
 
+\begin{frame}[fragile,plain]
+\frametitle{MVC?}
+\small
+\begin{lstlisting}
+from traitsui.api import View, Item
+class LorenzEquation(ODE):
+    # ...
+
+view = View(Item('s'),
+            Item('r'),
+            Item('b'))
+eq = LorenzEquation()
+eq.configure_traits(view=view)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{Views: common parameters}
+\begin{itemize}
+    \item \typ{title}: Title of the view
+    \item \typ{kind}: \typ{'modal', 'live', 'livemodal'}
+    \item \typ{resizable}
+    \item \typ{width, height}
+    \item \typ{buttons}: OK, Cancel and other buttons
+    \item \typ{id}: persists view
+    \item \ldots and a lot more
+\end{itemize}
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{Items: common parameters}
+\begin{itemize}
+    \item \typ{name}: name of trait being edited
+    \item \typ{label}: optional label to use
+    \item \typ{style}: \typ{'simple'/'custom'/'readonly'/...}
+    \item \typ{show_label}: \typ{True/False}
+    \item \typ{help}: Help text for item
+    \item \typ{editor}: Specific editor to use
+    \item \typ{defined_when}: expression
+    \item \typ{visible_when}: expression
+    \item \typ{enabled_when}: expression
+    \item \ldots 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{Groups}
+\begin{itemize}
+    \item \typ{Group, VGroup, HGroup}: group of items
+    \item Parameters:
+        \begin{itemize}
+            \item \typ{label}
+            \item \typ{layout}: \typ{'normal', 'split', 'tabbed', ...}
+            \item \typ{show_labels}: \typ{True/False}
+            \item \typ{defined_when, ...}
+            \item \typ{width, height}
+        \end{itemize}
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}[fragile,plain]
+\frametitle{Lorenz Equation View}
+Configure the parameters of the Lorenz equation \emph{s}, \emph{r} and \emph{b}
+\footnotesize
+\begin{lstlisting}
+class LorenzEquation(ODE):
+    ...
+    view = View(
+        Item('s', 
+             editor=RangeEditor(low=0.0, high=20.0)),
+        Item('r', 
+            editor=RangeEditor(low=20.0, high=36.0)),
+        Item('b', 
+            editor=RangeEditor(low=0.0, high=5.0))
+        )
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[plain]
+    \frametitle{Exercise}
+  \begin{block}{Customize the view for Lorenz equation}
+      XXX
+      Use the given template and other modules and get the
+      solution for the \ldots
+  \end{block}
+\end{frame}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -699,20 +864,29 @@ class LorenzEquation(ODE):
 \begin{frame}
   \frametitle{Chaco Architecture Overview}
   \begin{itemize}
-      \item Data Handling: wrap input data, transform co-ordinates between data and screen space (eg., ArrayDataSource, LinearMapper)
-      \item Visual components: render to the screen (eg. LinePlot, ScatterPlot, Legend, PlotAxis, ...)
-      \item Tools: handle keyboard or mouse events and modify other components (eg. PanTool, ZoomTool, ScatterInspector)
+
+      \item Data Handling: wrap input data, transform co-ordinates
+          between data and screen space (eg., \typ{ArrayDataSource,
+          LinearMapper})
+
+      \item Visual components: render to the screen (eg. \typ{LinePlot,
+          ScatterPlot, Legend, PlotAxis, ...})
+
+      \item Tools: handle keyboard or mouse events and modify other
+          components (eg. \typ{PanTool, ZoomTool, ScatterInspector})
+
   \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile,plain]
 \frametitle{Simple LinePlot}
-\scriptsize
+\footnotesize
 \begin{lstlisting}
 class LinePlot(HasTraits):
     plot = Instance(Plot)
     traits_view = View(
-        Item('plot',editor=ComponentEditor(), show_label=False),
+        Item('plot',editor=ComponentEditor(), 
+             show_label=False),
              width=500, height=500,
         resizable=True,
         title="Chaco Plot")
@@ -776,9 +950,11 @@ class LinePlot(HasTraits):
 
 \begin{frame}[fragile,plain]
 \frametitle{Plotting the ODE Solution}
-\scriptsize
+
 The Plot view, plot and the old solution. ODE can be obtained from ODESolver,
 so it can be a property.
+
+\footnotesize
 \begin{lstlisting}
 class ODEPlot(HasTraits):
     """ A 2D plot of ode solution variables. """
@@ -797,14 +973,15 @@ class ODEPlot(HasTraits):
 
 \begin{frame}[fragile,plain]
 \frametitle{Plotting the ODE Solution}
-\scriptsize
+\footnotesize
 We can create a plot using the first solution array.
 \begin{lstlisting}
 class ODEPlot(HasTraits):
     ...
-    traits_view = View(Item('plot', editor=ComponentEditor(),
-                            show_label=False),
-                       resizable=True, title="ODE Solution")
+    traits_view = View(
+            Item('plot', editor=ComponentEditor(),
+                 show_label=False),
+            resizable=True, title="ODE Solution")
 
     def _plot_default(self):
         self.pd.set_data('index', self.ode_soln.t_arr)
@@ -822,27 +999,20 @@ class ODEPlot(HasTraits):
 
 \begin{frame}[fragile,plain]
 \frametitle{Plotting the ODE Solution}
-\scriptsize
 We can make the plot react to changes to the solution
 (changing initial condition etc.)
+\footnotesize
 \begin{lstlisting}
 class ODEPlot(HasTraits):
     ...
     @on_trait_change('ode_soln.soln_arr')
     def _on_soln_changed(self):
-        self.pd.set_data('index', self.ode_soln.t_arr)
-        self.pd.set_data('value', self.ode_soln.soln_arr[:, 0])
+        self.pd.set_data('index', 
+                self.ode_soln.t_arr)
+        self.pd.set_data('value', 
+                self.ode_soln.soln_arr[:, 0])
 \end{lstlisting}
 \end{frame}
-
-\begin{frame}[fragile,plain]
-\frametitle{Plotting the ODE Solution}
-Complete plot view with selection for variables to plot
-\begin{center}
-    \includegraphics[height=3in, interpolate=true]{images/plot2d}
-\end{center}
-\end{frame}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Mayavi}
@@ -850,19 +1020,147 @@ Complete plot view with selection for variables to plot
 \begin{frame}
   \frametitle{Mayavi}
   \begin{itemize}
-      \item XXX
+      \item \typ{from mayavi import mlab}
+      \item Easy to use
+      \item Uses Traits/TraitsUI heavily
+      \item Can embed 3D plots
  \end{itemize}
 \end{frame}
 
+\begin{frame}[plain, fragile]
+    \frametitle{A simple plot}
+    \begin{columns}
+        \column{0.5\textwidth}
+        \myemph{\Large 1D data}
+
+        \column{0.5\textwidth}
+    \pgfimage[width=2in]{images/plot3d_ex}
+    \end{columns}
+
+    \begin{lstlisting}
+>>> from numpy import *
+>>> t = linspace(0, 2*pi, 50)
+>>> u = cos(t)*pi
+>>> x, y, z = sin(u), cos(u), sin(t)
+
+    \end{lstlisting}
+
+    \emphbar{\PythonCode{>>> mlab.plot3d(x, y, z, t)}}
+\end{frame}
+
+
+\begin{frame}[plain, fragile]
+    \frametitle{Changing how things look}
+
+    \begin{block}{Clearing the view}
+    \typ{>>> mlab.clf()}
+    \end{block}
+
+    \pause
+
+    \begin{block}{IPython is your friend!}
+    \PythonCode{>>> mlab.points3d?}
+
+    \begin{itemize}
+
+        \item Extra argument: Scalars
+
+        \item Keyword arguments
+
+        \item UI
+    \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Embedding a 3D plot}
+\footnotesize
+\begin{lstlisting}
+from mayavi.core.ui.api import MayaviScene, \
+    MlabSceneModel, SceneEditor
+
+class Plot3D(HasTraits):
+    scene = Instance(MlabSceneModel, args=())
+    view = View(Item(name='scene',
+                     editor=SceneEditor(
+                         scene_class=MayaviScene),
+                     show_label=False, resizable=True,
+                     height=500, width=500),
+                resizable=True)
+\end{lstlisting}
+\pause
+\begin{lstlisting}
+   @on_trait_change('scene.activated')
+   def generate_data(self):
+        # Create some data
+        X, Y = mgrid[-2:2:100j, -2:2:100j]
+        R = 10*sqrt(X**2 + Y**2)
+        Z = sin(R)/R
+        self.scene.mlab.surf(X,Y,Z,colormap='gist_earth')
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[plain]
+    \frametitle{Exercise}
+\normalsize
+  \begin{block}{Add a slider to the UI}
+      Add a Range slider to the above example to change the
+       \typ{R = 10*sqrt(X**2 + Y**2)} to 
+       \typ{R = self.factor*sqrt(X**2 + Y**2)}
+       such that the \typ{factor} can be adjusted.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Solution}
+\footnotesize
+\begin{lstlisting}
+from traits.api import Range # <--
+class Plot3D(HasTraits):
+    scene = Instance(MlabSceneModel, args=())
+    factor = Range(0.0, 20.0, 10.0) # <--
+    view = View(Item(name='scene', 
+                     # ...
+                     ),
+                Item(name='factor'), # <--
+                resizable=True)
+
+   @on_trait_change('scene.activated, factor') # <--
+   def generate_data(self):
+        # ...
+\end{lstlisting}
+\end{frame}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Putting all together}
+\section{Putting it all together}
 
 \begin{frame}
   \frametitle{The application}
   \begin{itemize}
-      \item XXX
+      \item Easy to put this together
+      \item Exercise for you!
  \end{itemize}
 \end{frame}
+
+\begin{frame}
+  \frametitle{So what?}
+  \begin{itemize}
+      \item Focus on the object model
+      \item Solve the actual problem
+      \item Model separation
+      \item Easy to ``wire-up''
+      \item UI is mostly declarative
+ \end{itemize}
+\end{frame}
+
+
+\begin{frame}[plain]
+  \frametitle{}
+  \begin{center}
+      What next?
+  \end{center}
+\end{frame}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Note on Envisage}
@@ -870,16 +1168,84 @@ Complete plot view with selection for variables to plot
 \begin{frame}
   \frametitle{Envisage}
   \begin{itemize}
-      \item XXX
+      \item Extensible framework
+      \item \typ{Plugins}
+      \item \typ{ExtensionPoints}
+      \item \typ{Extensions}
+      \item Similar to Eclipse
  \end{itemize}
 \end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Application frameworks \ldots}
+  \begin{block}{Central idea}
+    \begin{itemize}
+    \item Developer focuses on making a clean library
+    \item Framework API specifies how different pieces of the app
+      interact
+    \item Plugin writer exposes the library or objects involved into
+      the framework
+    \item Application writer uses plugins to create new application
+      easily
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Application frameworks \ldots}
+  \begin{center}
+    \includegraphics[width=3.75in,interpolate=true]{images/framework}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Big picture}
+  \begin{block}{Application and plugins}
+    \begin{itemize}
+    \item Envisage application: given a list of plugins
+    \item Plugins setup their contributions
+    \item Application starts: all plugins are started
+    \item Plugins add their capabilties to the app
+    \item Application stops: all plugins are stopped
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Big picture}
+  \begin{block}{Interaction/communication between plugins}
+    \begin{itemize}
+    \item Plugins define extension points
+    \item Extensions $\rightarrow$ extension points
+    \item Services
+      \begin{itemize}
+      \item Well known/shared objects
+      \item Can be registered and looked-up with the application
+      \end{itemize}
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Envisage application}
+  \begin{center}
+    \includegraphics[width=3.5in,interpolate=true]{images/envisage}
+  \end{center}
+\end{frame}
+
 
 \section{Summary}
 
 \begin{frame}
   \frametitle{Summary}
   \begin{itemize}
-      \item XXX
+      \item Traits
+      \item TraitsUI
+      \item Chaco
+      \item Mayavi
+      \item Envisage
  \end{itemize}
 \end{frame}
 
