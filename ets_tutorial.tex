@@ -360,9 +360,9 @@ t = np.linspace(0., 50., 2000)
 r = odeint(lorenz, start, t)
 x, y, z = r[:,0], r[:,1], r[:,2]
 
-mlab.plot3d(x, y, z, t, 
 from mayavi import mlab
-                tube_radius=None)
+mlab.plot3d(x, y, z, t, 
+            tube_radius=None)
 \end{lstlisting}
 \end{frame}
 
