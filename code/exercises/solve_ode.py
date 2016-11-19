@@ -1,6 +1,7 @@
 import numpy as np
 from traits.api import (HasTraits, Str, Int, List,  Float, Instance, Either, 
-    Array, Property, cached_property)
+    Array, Property, cached_property, Range, Event, on_trait_change)
+from traitsui.api import View, Item, RangeEditor
 
 class ODE(HasTraits):
     """ An ODE of the form dX/dt = f(X).
@@ -8,6 +9,8 @@ class ODE(HasTraits):
     name = Str
     num_vars = Int(0)
     vars = List(Str, desc='The names of the variables of X vector')
+    
+    changed = Event
 
     def eval(self, X, t):
         """ Evaluate the derivative function f(X). """
@@ -20,9 +23,18 @@ class LorenzEquation(ODE):
     name = 'Lorenz Equation'
     num_vars = 3
     vars = ['x', 'y', 'z']
-    s = Float(10)
+    s = Range(0.0, 20.0, 10.0, desc='parameter s')
     r = Float(28)
-    b = Float(8./3)
+    b = Range(0.0, 10.0, 8./3)
+
+    view = View(Item(name='s'),
+                Item(name='r', editor=RangeEditor(low=0.0, high=30.0)),
+                Item(name='b'),
+                title='Lorenz equation')
+                
+    @on_trait_change('s, b, r')
+    def _params_changed(self):
+        self.changed = True
 
     def eval(self, X, t):
         x, y, z = X[0], X[1], X[2]
@@ -34,7 +46,12 @@ class ODESolver(HasTraits):
     ode = Instance(ODE)
     initial_state = Either(Float, Array)
     t = Array
-    solution = Property(Array, depends_on='initial_state, t, ode')
+    solution = Property(Array, depends_on='initial_state, t, ode.changed')
+    
+    view = View(Item(name='ode', show_label=False, style='custom'), 
+                Item(name='initial_state'), 
+                Item(name='solution', style='readonly'), 
+                title='ODE Solver')
             
     @cached_property
     def _get_solution(self):
@@ -51,3 +68,8 @@ class ODESolver(HasTraits):
 ###############################################################################
 # Find the solution of the ODE.
 # Hint: you can use an initial state of [1,1,1] and a t = [1, 2, 4] or so.
+if __name__ == '__main__':
+    ode = LorenzEquation()
+    s = ODESolver(ode=ode, initial_state=[1,1,1], t=[1,2])
+    print s.solution
+    

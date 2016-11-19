@@ -8,7 +8,7 @@ from enable.api import Component, ComponentEditor
 from chaco.api import Plot, ArrayPlotData
 from chaco.tools.api import TraitsTool, ZoomTool, PanTool
 
-from ode import ODE, ODESolver
+from solve_ode import ODE, ODESolver
 
 
 class ODEPlot(HasTraits):
@@ -52,7 +52,7 @@ class ODEPlot(HasTraits):
 
 
 if __name__ == '__main__':
-    from ode import LorenzEquation
+    from solve_ode import LorenzEquation
     ode = LorenzEquation()
     solver = ODESolver(ode=ode, initial_state=[10.,50.,50.], t=np.linspace(0,10,1001))
     plot = ODEPlot(solver=solver)
