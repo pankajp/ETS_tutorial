@@ -67,7 +67,7 @@ def check_error(func):
         try:
             return func(self, X, t)
         except Exception as e:
-            print e
+            print(e)
             error = True
         finally:
             self.error = error
@@ -176,7 +176,7 @@ class ODESolver(HasTraits):
         try:
             return self.solve()
         except Exception as e:
-            print e
+            print(e)
             self.ode.error = True
 
     def solve(self):

@@ -20,7 +20,7 @@ class ODEPlot(HasTraits):
     solver = Instance(ODESolver)
     traits_view = View(Item('plot', editor=ComponentEditor(),
                             show_label=False),
-                        Item('ode', style='custom'),
+                       Item('ode', style='custom'),
                        width=800, height=700, resizable=True,
                        title="ODE Solution")
 

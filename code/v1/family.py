@@ -14,7 +14,7 @@ class Child(HasTraits):
     last_name = Delegate('father') 
 
     def _age_changed(self, old, new): 
-        print 'Age changed from %s to %s ' % (old, new)
+        print('Age changed from %s to %s ' % (old, new))
 
 if __name__ == '__main__':
     father = Parent(last_name='Joe')

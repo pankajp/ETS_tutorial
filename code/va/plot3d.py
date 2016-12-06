@@ -43,7 +43,7 @@ class ODEPlot3D(HasTraits):
     @cached_property
     def _get_name_list(self):
         names = ['time']
-        if isinstance(self.ode.vars, basestring):
+        if isinstance(self.ode.vars, str):
             names.append(self.ode.vars)
         else:
             names.extend(self.ode.vars)

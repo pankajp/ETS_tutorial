@@ -71,5 +71,5 @@ class ODESolver(HasTraits):
 if __name__ == '__main__':
     ode = LorenzEquation()
     s = ODESolver(ode=ode, initial_state=[1,1,1], t=[1,2])
-    print s.solution
+    print(s.solution)
     
