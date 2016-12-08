@@ -32,10 +32,6 @@ class ODEApp(HasTraits):
                        id='example.ODEApp',
                        title="ODE Solution")
 
-    def _ode_changed(self):
-        self.plot = self._plot_default()
-        self.plot3d = self._plot3d_default()
-
     def _solver_default(self):
         return ODESolver(ode=self.ode_list[0])
 

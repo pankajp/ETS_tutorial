@@ -26,7 +26,7 @@ class ODEPlot3D(HasTraits):
 
     name_list = Property(List(Str), depends_on='ode.vars')
 
-    ode = Property(Instance(ODE), depends_on='solver')
+    ode = Property(Instance(ODE), depends_on='solver.ode')
     solver = Instance(ODESolver)
     traits_view = View(Item('scene', editor=SceneEditor(scene_class=MayaviScene),
                             show_label=False),
@@ -48,6 +48,13 @@ class ODEPlot3D(HasTraits):
         else:
             names.extend(self.ode.vars)
         return names
+
+    def _name_list_changed(self):
+        n = len(self.name_list)
+        self.trait_set(x_name=self.name_list[1%n],
+                       y_name=self.name_list[2%n],
+                       z_name=self.name_list[3%n],
+                       s_name=self.name_list[0])
 
     @on_trait_change('x_name,y_name,z_name,s_name')
     def _on_name_changed(self, obj, name, old, new):
@@ -83,11 +90,6 @@ class ODEPlot3D(HasTraits):
 
     @on_trait_change('scene.activated')
     def update_flow(self):
-        n = len(self.name_list)
-        self.trait_set(x_name=self.name_list[1%n],
-                       y_name=self.name_list[2%n],
-                       z_name=self.name_list[3%n],
-                       s_name=self.name_list[0])
         self.plot3d.mlab_source.set(x=self.x_arr, y=self.y_arr, z=self.z_arr, s=self.s_arr)
 
     def _plot3d_default(self):

@@ -145,7 +145,7 @@ class GenericODE(ODE):
         return ['x%d'%(i) for i in range(self.num_vars)]
 
     def _equations_default(self):
-        return ['x%d'%(i) for i in range(self.num_vars)]
+        return ['-%s' % var for var in self.vars]
 
 
 class ODESolver(HasTraits):

@@ -21,7 +21,7 @@ class ODEPlot(HasTraits):
 
     name_list = Property(List(Str), depends_on='ode.vars')
 
-    ode = Property(Instance(ODE), depends_on='solver')
+    ode = Property(Instance(ODE), depends_on='solver.ode')
     solver = Instance(ODESolver)
     traits_view = View(Item('plot', editor=ComponentEditor(),
                             show_label=False),
@@ -74,6 +74,9 @@ class ODEPlot(HasTraits):
         plot.y_axis.title = self.value_name
         plot.plot(('index', 'value'))
         return plot
+
+    def _name_list_changed(self):
+        self.reset_traits(['index_name', 'value_name'])
 
     def _index_name_default(self):
         return self.name_list[0]
