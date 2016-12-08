@@ -34,8 +34,7 @@ class ODESolver(HasTraits):
     ode = Instance(ODE)
     initial_state = Either(Float, Array)
     t = Array
-    solution = Property(Array, 
-            depends_on='initial_state, t, ode')
+    solution = Property(Array, depends_on='initial_state, t, ode')
 
     @cached_property
     def _get_solution(self):
@@ -46,8 +45,7 @@ class ODESolver(HasTraits):
         of the solution vector at specified times t. 
         """
         from scipy.integrate import odeint
-        return odeint(self.ode.eval, self.initial_state, 
-                      self.t)
+        return odeint(self.ode.eval, self.initial_state, self.t)
 
 
 if __name__ == '__main__':

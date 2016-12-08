@@ -10,7 +10,7 @@ class ODEPlot3D(HasTraits):
     """ A 2D plot of ode solution variables. """
     scene = Instance(MlabSceneModel, args=())
     plot3d = Any
-    ode = Property(Instance(ODE), depends_on='solver')
+    ode = Property(Instance(ODE), depends_on='solver.ode')
     solver = Instance(ODESolver)
     traits_view = View(Item('scene', editor=SceneEditor(scene_class=MayaviScene),
                             show_label=False),

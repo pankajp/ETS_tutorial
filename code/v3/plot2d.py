@@ -16,11 +16,11 @@ class ODEPlot(HasTraits):
     plot = Instance(Component)
     pd = Instance(ArrayPlotData, args=())
 
-    ode = Property(Instance(ODE), depends_on='solver')
+    ode = Property(Instance(ODE), depends_on='solver.ode')
     solver = Instance(ODESolver)
     traits_view = View(Item('plot', editor=ComponentEditor(),
                             show_label=False),
-                        Item('ode', style='custom'),
+                       Item('ode', style='custom'),
                        width=800, height=700, resizable=True,
                        title="ODE Solution")
 

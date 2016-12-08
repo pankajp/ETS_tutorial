@@ -24,8 +24,6 @@ class LinePlot(HasTraits):
         plot.tools.append(ZoomTool(plot))
         plot.tools.append(PanTool(plot))
         plot.tools.append(TraitsTool(plot))
-        
-        
         plot.plot(("x", "y"), type="line", color="blue")
         plot.title = "sin(x) * x^3"
         return plot
