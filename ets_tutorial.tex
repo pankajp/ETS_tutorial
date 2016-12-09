@@ -114,8 +114,8 @@
 \beamertemplatenavigationsymbolsempty
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\pgfdeclareimage[height=0.75cm]{enthought-logo}{enthought-logo}
-\logo{\pgfuseimage{enthought-logo}}
+%\pgfdeclareimage[height=0.75cm]{enthought-logo}{enthought-logo}
+%\logo{\pgfuseimage{enthought-logo}}
 
 
 %% Delete this, if you do not want the table of contents to pop up at
@@ -157,11 +157,12 @@
   \begin{itemize}
     \item Use Python to build interactive desktop applications
   \end{itemize}
-  \end{block}  
+  \end{block}
 
   \begin{block}{Goal: Successful participants will be able to}
     \begin{itemize}
-      \item Start using Enthought Tool Suite (ETS) to build non-trivial applications
+      \item Start using Traits and Enthought Tool Suite (ETS) to build
+		    non-trivial interactive applications with 2D and 3D visualizations
 
     \end{itemize}
   \end{block}
@@ -180,9 +181,9 @@
 \begin{frame}
   \frametitle{Approach}
   \begin{itemize}
-      \item A graphical explorer for ODEs \alert{from the ground up}
+      \item A graphical explorer for ODEs from the ground up
   \item Support arbitrary 2 and 3 dimensional systems
-  \item Using ETS
+  \item Using Enthought Tool Suite
  \end{itemize}
 \end{frame}
 
@@ -191,28 +192,11 @@
   \begin{itemize}
   \item Something interesting and concrete
   \item Same ideas extend to other situations
+  \item ODEs used to model many systems: Physics, Astronomy, Weather, Chemistry, Economics, Ecology
+  \item Numerical solution: \typ{scipy}
  \end{itemize}
 \end{frame}
 
-\subsection{ODE 101}
-
-
-\begin{frame}
-  \frametitle{ODE 101}
-  \begin{itemize}
-    \item Used to model many systems
-        \begin{itemize}
-            \item Physics, astronomy
-            \item Geology (weather modeling)
-            \item Chemistry (reactions)
-            \item Biology
-            \item Ecology/population modeling
-            \item Economics (stock trends, interest rates etc.)
-        \end{itemize}
-    \item Rich behavior
-    \item Numerical solution: \typ{scipy}
- \end{itemize}
-\end{frame}
 
 \begin{frame}
   \frametitle{Simple equation}
@@ -409,8 +393,7 @@ mlab.plot3d(x, y, z, t,
     \item  \alert{trait}: Python object attribute with additional characteristics
     \vspace*{2em}
 
-    \item \url{http://code.enthought.com/projects/traits}
-    \item \url{http://github.enthought.com/traits/tutorials}
+    \item \url{http://docs.enthought.com/traits}
 
   \end{itemize}
 \end{frame}
@@ -422,6 +405,7 @@ mlab.plot3d(x, y, z, t,
     \item Validation: strongly typed
     \item Delegation: value delegation
     \item Notification: events
+    \item Documentation: types and constraints
     \item Visualization: MVC, automatic GUI!
   \end{itemize}
 \end{frame}
@@ -1134,7 +1118,7 @@ class Plot3D(HasTraits):
   \begin{itemize}
       \item Easy to put this together
       \item Exercise for you!
- \end{itemize}
+  \end{itemize}
 \vspace{0.5in}
 {\footnotesize \textbf{Hint:} Compose various views using InstanceEditor with '\emph{custom}' style!}
 \end{frame}
@@ -1161,87 +1145,7 @@ class Plot3D(HasTraits):
 \end{frame}
 
 
-\begin{frame}[plain]
-  \frametitle{}
-  \begin{center}
-      What next?
-  \end{center}
-\end{frame}
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Note on Envisage}
-
-\begin{frame}
-  \frametitle{Envisage}
-  \begin{itemize}
-      \item Extensible framework
-      \item \typ{Plugins}
-      \item \typ{ExtensionPoints}
-      \item \typ{Extensions}
-      \item Similar to Eclipse
- \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{Application frameworks \ldots}
-  \begin{block}{Central idea}
-    \begin{itemize}
-    \item Developer focuses on making a clean library
-    \item Framework API specifies how different pieces of the app
-      interact
-    \item Plugin writer exposes the library or objects involved into
-      the framework
-    \item Application writer uses plugins to create new application
-      easily
-    \end{itemize}
-  \end{block}
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{Application frameworks \ldots}
-  \begin{center}
-    \includegraphics[width=3.75in,interpolate=true]{images/framework}
-  \end{center}
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{Big picture}
-  \begin{block}{Application and plugins}
-    \begin{itemize}
-    \item Envisage application: given a list of plugins
-    \item Plugins setup their contributions
-    \item Application starts: all plugins are started
-    \item Plugins add their capabilties to the app
-    \item Application stops: all plugins are stopped
-    \end{itemize}
-  \end{block}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Big picture}
-  \begin{block}{Interaction/communication between plugins}
-    \begin{itemize}
-    \item Plugins define extension points
-    \item Extensions $\rightarrow$ extension points
-    \item Services
-      \begin{itemize}
-      \item Well known/shared objects
-      \item Can be registered and looked-up with the application
-      \end{itemize}
-    \end{itemize}
-  \end{block}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Envisage application}
-  \begin{center}
-    \includegraphics[width=3.5in,interpolate=true]{images/envisage}
-  \end{center}
-\end{frame}
-
 
 \section{Summary}
 
@@ -1252,7 +1156,6 @@ class Plot3D(HasTraits):
       \item TraitsUI
       \item Chaco
       \item Mayavi
-      \item Envisage
  \end{itemize}
 \end{frame}
 
