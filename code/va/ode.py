@@ -34,6 +34,10 @@ class EpidemicODE(ODE):
     L = Float(2.5e5)
     k = Float(3e-5)
 
+    @on_trait_change('L,k')
+    def _on_params_changed(self):
+        self.changed = True
+
     def eval(self, y, t):
         return self.k * y * (self.L-y)
 
@@ -192,6 +196,7 @@ class ODESolver(HasTraits):
     @on_trait_change('t_low, t_high, t_num')
     def _change_t(self):
         self.t = self._t_default()
+
 
 if __name__ == '__main__':
     ode = GenericODE()
